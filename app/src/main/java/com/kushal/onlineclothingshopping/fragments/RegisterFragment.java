@@ -44,6 +44,9 @@ public class RegisterFragment extends Fragment implements View.OnClickListener {
         editor.commit();
 
         Commons.alert(getContext(),"You have been registered sucessfully! Login now.");
+
+        regUsername.setText("");
+        regPassword.setText("");
     }
 
     @Override

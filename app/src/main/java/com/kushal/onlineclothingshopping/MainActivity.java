@@ -31,10 +31,12 @@ public class MainActivity extends AppCompatActivity {
                     Intent intent = new Intent(getApplicationContext(),LoginRegisterActivity.class);
                     intent.putExtra("noLogIn",true);
                     startActivity(intent);
+                    finish();
                 }else{
                     Intent intent = new Intent(getApplicationContext(),DashboardActivity.class);
                     intent.putExtra("Welcome!",true);
                     startActivity(intent);
+                    finish();
                 }
             }
         });

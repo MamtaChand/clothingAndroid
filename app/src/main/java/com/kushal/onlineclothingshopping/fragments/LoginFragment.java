@@ -46,6 +46,7 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
             intent.putExtra("msg","Welcome! "+username);
             Commons.loggedIn = true;
             startActivity(intent);
+            getActivity().finish();
         }else{
             Commons.alert(getContext(),"Invalid login details.");
         }
