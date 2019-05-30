@@ -4,16 +4,4 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
-    <string-array name="clothesImageArray">
-        <item>suit</item>
-        <item>pant</item>
-        <item>shirt</item>
-        <item>pantkneecut</item>
-        <item>kurtha</item>
-        <item>slipper</item>
-        <item>socks</item>
-        <item>shoe</item>
-        <item>sweater</item>
-        <item>jacket</item>
-    </string-array>
 </resources>

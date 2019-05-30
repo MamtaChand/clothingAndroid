@@ -1,21 +1,29 @@
 package com.kushal.onlineclothingshopping.models;
 
-import android.graphics.drawable.Drawable;
-
 public class Item {
 
+    private int id;
     private String itemName;
     private String itemPrice;
-    private int itemImageName;
+    private String itemImageName;
     private String itemDescription;
 
     public Item(){ }
 
-    public Item(String itemName, String itemPrice, int itemImageName, String itemDescription) {
+    public Item(int id, String itemName, String itemPrice, String itemImageName, String itemDescription) {
+        this.id = id;
         this.itemName = itemName;
         this.itemPrice = itemPrice;
         this.itemImageName = itemImageName;
         this.itemDescription = itemDescription;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getItemName() {
@@ -34,11 +42,11 @@ public class Item {
         this.itemPrice = itemPrice;
     }
 
-    public int getItemImageName() {
+    public String getItemImageName() {
         return itemImageName;
     }
 
-    public void setItemImageName(int itemImageName) {
+    public void setItemImageName(String itemImageName) {
         this.itemImageName = itemImageName;
     }
 

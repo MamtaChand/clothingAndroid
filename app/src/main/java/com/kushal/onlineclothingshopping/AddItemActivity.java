@@ -1,21 +1,41 @@
 package com.kushal.onlineclothingshopping;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.StrictMode;
+import android.provider.MediaStore;
+import android.support.annotation.Nullable;
+import android.support.v4.content.CursorLoader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Spinner;
+import android.widget.ImageView;
 
-import java.io.PrintStream;
+import com.kushal.onlineclothingshopping.api.ItemsAPI;
+import com.kushal.onlineclothingshopping.models.ItemResponse;
+import com.kushal.onlineclothingshopping.url.URL;
+
+import java.io.File;
+
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.http.Multipart;
 
 public class AddItemActivity extends AppCompatActivity {
 
     private EditText itemName,itemPrice,itemDescription;
     private Button btnAddItem,openDashboard;
-    private Spinner itemImageName;
+    private ImageView itemImageName;
+    String imagePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,7 +47,13 @@ public class AddItemActivity extends AppCompatActivity {
         itemPrice = findViewById(R.id.itemPrice);
         btnAddItem = findViewById(R.id.btnAddItem);
         itemImageName = findViewById(R.id.itemImageName);
-        initSpinner();
+
+        itemImageName.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                BrowseImage();
+            }
+        });
 
         btnAddItem.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -36,7 +62,6 @@ public class AddItemActivity extends AppCompatActivity {
                         itemName.getText().toString().length() > 0
                         && itemPrice.getText().toString().length() > 0
                         && itemDescription.getText().toString().length() > 0
-
                 ){
                     addItem();
                 }else {
@@ -56,40 +81,102 @@ public class AddItemActivity extends AppCompatActivity {
 
     }
 
-
-    //initialize spinner with image names dropdown
-    private void initSpinner(){
-        Spinner spinner = (Spinner) findViewById(R.id.itemImageName);
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.clothesImageArray, android.R.layout.simple_spinner_item);
-        // Specify the layout to use when the list of choices appears
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        // Apply the adapter to the spinner
-        spinner.setAdapter(adapter);
+    private void BrowseImage(){
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setType("image/*");
+        startActivityForResult(intent, 0);
     }
 
-    private void addItem(){
-        try{
-            PrintStream printStream = new PrintStream(openFileOutput("items.txt",MODE_PRIVATE | MODE_APPEND));
-            printStream.println(getEncodedItemString());
-            Commons.alert(getApplicationContext(),"Item saved successfully.");
-            clearTextFields();
-        }catch (Exception e){
-            e.printStackTrace();
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+
+        super.onActivityResult(requestCode,resultCode,data);
+
+        if (resultCode == RESULT_OK ){
+            if (data == null){
+                Commons.alert(this,"Please select an image!");
+                return;
+            }
         }
+
+        Uri uri = data.getData();
+        imagePath = getRealPathFromUri(uri);
+        previewImage(imagePath);
+
     }
 
-    private String getEncodedItemString(){
-        String imageName = itemImageName.getSelectedItem().toString();
-        String itemDetail = itemName.getText().toString()+"->"+itemPrice.getText().toString()+"->"+
-                            imageName+"->"+itemDescription.getText().toString();
-        return itemDetail;
+    private void previewImage(String imagePath) {
+
+        File imgFile = new File(imagePath);
+        if (imgFile.exists()){
+            Bitmap bitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+            itemImageName.setImageBitmap(bitmap);
+        }
+
+    }
+    private String getRealPathFromUri(Uri uri) {
+        String[] projection ={MediaStore.Images.Media.DATA};
+        CursorLoader loader= new CursorLoader(getApplicationContext(),uri,projection, null,null,null);
+        Cursor cursor= loader.loadInBackground();
+        int colIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        String result =cursor.getString(colIndex);
+        cursor.close();
+        return result;
+    }
+
+    private void StrictMode(){
+        StrictMode.ThreadPolicy policy =  new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
     }
 
     private void clearTextFields(){
         itemName.setText("");
         itemDescription.setText("");
         itemPrice.setText("");
+    }
+
+    private void addItem(){
+        MultipartBody.Part imageBodyPart = getItemImageMultiPartBody();
+
+        //item values
+        RequestBody itemNameReq = RequestBody.create(MediaType.parse("multipart/form-data"),itemName.getText().toString());
+        RequestBody itemPriceReq = RequestBody.create(MediaType.parse("multipart/form-data"),itemPrice.getText().toString());
+        RequestBody itemDescriptionReq = RequestBody.create(MediaType.parse("multipart/form-data"),itemDescription.getText().toString());
+
+        ItemsAPI itemsAPI = URL.getRetrofitInstance().create(ItemsAPI.class);
+        Call<ItemResponse> itemCall = itemsAPI.addItem(
+                itemNameReq,
+                itemPriceReq,
+                imageBodyPart,
+                itemDescriptionReq
+        );
+
+        itemCall.enqueue(new Callback<ItemResponse>() {
+            @Override
+            public void onResponse(Call<ItemResponse> call, Response<ItemResponse> response) {
+                if ( !response.isSuccessful() ){
+                    Commons.alert(AddItemActivity.this,"Code: "+response.code());
+                    return;
+                }
+                Commons.alert(AddItemActivity.this,"Item added!");
+                clearTextFields();
+            }
+
+            @Override
+            public void onFailure(Call<ItemResponse> call, Throwable t) {
+                Commons.alert(AddItemActivity.this,"Call failure");
+            }
+        });
+
+    }
+
+    private MultipartBody.Part getItemImageMultiPartBody(){
+        File file = new File(imagePath);
+
+        RequestBody requestBody = RequestBody.create(MediaType.parse("multipart/form-data"),file);
+        MultipartBody.Part body = MultipartBody.Part.createFormData("itemImage",file.getName(),requestBody);
+
+        return body;
     }
 }

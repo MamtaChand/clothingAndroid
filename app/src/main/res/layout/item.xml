@@ -10,7 +10,7 @@
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:id="@+id/itemImage"
-        android:src="@drawable/kurtha"/>
+        android:src="@drawable/bg"/>
 
     <TextView
         android:id="@+id/itemName"
