@@ -28,19 +28,19 @@ public class DashboardActivity extends AppCompatActivity {
         setContentView(R.layout.activity_dashboard);
 
 
-//        //if not logged in go to login activity
-//        if( !Commons.loggedIn ){
-//            Intent intent = new Intent(getApplicationContext(),LoginRegisterActivity.class);
-//            intent.putExtra("noLogIn",true);
-//            startActivity(intent);
-//        }
-//
-//        //check if any extras have been sent
-//        Bundle extras = getIntent().getExtras();
-//        String parameter;
-//        if(extras != null) {
-//            Commons.alert(getApplicationContext(),extras.getString("msg"));
-//        }
+        //if not logged in go to login activity
+        if( !Commons.loggedIn ){
+            Intent intent = new Intent(getApplicationContext(),LoginRegisterActivity.class);
+            intent.putExtra("noLogIn",true);
+            startActivity(intent);
+        }
+
+        //check if any extras have been sent
+        Bundle extras = getIntent().getExtras();
+        String parameter;
+        if(extras != null) {
+            Commons.alert(getApplicationContext(),extras.getString("msg"));
+        }
 
         init();
 
